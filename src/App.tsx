@@ -58,7 +58,7 @@ export const App = () => {
   const [focusToken, setFocusToken] = useState(0);
   const [selectionSource, setSelectionSource] = useState<"map" | "list" | null>(null);
   const selectionRef = useRef<HTMLDivElement | null>(null);
-  const { notesById, readNote, handleNoteChange } = useListingNotes();
+  const { notesById, readNote, handleNoteChange, isNotesSaveFailed } = useListingNotes();
 
   function isVisibleOnMap(listing: ScoredListing): boolean {
     const note = notesById[listing.id];
@@ -148,6 +148,9 @@ export const App = () => {
   return (
     <main>
       <AppHeader activeCount={pricedListings.length} removedCount={removedListings.length} scannedOn="17 listopada 2026" />
+      {isNotesSaveFailed ? (
+        <p className="notes-error">Nie udało się połączyć z bazą notatek. Wpisy zostają na tym urządzeniu.</p>
+      ) : null}
       <ScoreLegend medianPricePerSquareMeter={medianMeterPrice} />
 
       <section id="mapa">
@@ -157,7 +160,7 @@ export const App = () => {
             Każdy pin to jedno aktywne ogłoszenie. Punkt pochodzi z mapy OLX i oznacza okolicę, nie
             drzwi. Liczba na wspólnym punkcie mówi, ile domów OLX położyło w tym samym miejscu —
             kliknięcie przybliża, a piny rozchodzą się w kółko. Wyróżnione ma większą złotą kropkę,
-            odrzucone znika z mapy. Komentarz i oba pola zostają w tej przeglądarce.
+            odrzucone znika z mapy. Komentarz i pola zapisują się w bazie.
           </p>
         </div>
         <ListingsMap

@@ -100,6 +100,11 @@ section {
   color: #4d463c;
 }
 
+.notes-error {
+  margin: 16px 0 0;
+  color: #8d3b32;
+}
+
 .filters {
   display: flex;
   flex-wrap: wrap;
