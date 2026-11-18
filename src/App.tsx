@@ -161,24 +161,42 @@ export const App = () => {
 
   const mapListings = pricedListings.filter(isVisibleOnMap);
   const highlightedListingIds = mapListings.map(readHighlightedId).filter(isPresentId);
-  const visibleListings = sortListings(
-    filterListings(pricedListings, filters),
-    filters.sortKey,
-    filters.sortDirection,
-    notesById,
-  );
-
-  function isMarkedListing(listing: ScoredListing): boolean {
+  function isHighlightedListing(listing: ScoredListing): boolean {
     const note = notesById[listing.id];
     if (!note) {
       return false;
     }
 
-    const hasComment = note.comment.trim().length > 0;
-    return hasComment || note.isHighlighted;
+    return note.isHighlighted;
   }
 
-  const markedListings = sortListings(pricedListings.filter(isMarkedListing), "price", "asc", notesById);
+  function isRejectedListing(listing: ScoredListing): boolean {
+    const note = notesById[listing.id];
+    if (!note) {
+      return false;
+    }
+
+    return note.isRejected;
+  }
+
+  function isKeptInAllListings(listing: ScoredListing): boolean {
+    const isSetAside = isHighlightedListing(listing) || isRejectedListing(listing);
+    return !isSetAside;
+  }
+
+  const visibleListings = sortListings(
+    filterListings(pricedListings.filter(isKeptInAllListings), filters),
+    filters.sortKey,
+    filters.sortDirection,
+    notesById,
+  );
+  const highlightedListings = sortListings(
+    pricedListings.filter(isHighlightedListing),
+    "price",
+    "asc",
+    notesById,
+  );
+  const rejectedListings = sortListings(pricedListings.filter(isRejectedListing), "price", "asc", notesById);
 
   function matchesSelected(listing: ScoredListing): boolean {
     return listing.id === selectedListingId;
@@ -276,11 +294,11 @@ export const App = () => {
 
       <section id="oznaczone">
         <div className="section-head">
-          <h2>Z komentarzem lub wyróżnione</h2>
-          <p>Domy, przy których jest komentarz albo zaznaczenie Wyróżnione.</p>
+          <h2>Wyróżnione</h2>
+          <p>Domy z zaznaczeniem Wyróżnione. Komentarz może być albo go nie być.</p>
         </div>
         <AllListingsTable
-          listings={markedListings}
+          listings={highlightedListings}
           selectedListingId={selectedListingId}
           onPhotoSelect={handlePhotoSelect}
           readNote={readNote}
@@ -290,7 +308,7 @@ export const App = () => {
           readPhoneDraft={readPhoneDraft}
           onPhoneChange={handlePhoneChange}
           isReadOnly={isReadOnly}
-          emptyMessage="Żadne ogłoszenie nie ma komentarza ani wyróżnienia."
+          emptyMessage="Żadne ogłoszenie nie jest wyróżnione."
         />
       </section>
 
@@ -363,6 +381,26 @@ export const App = () => {
           <p>Te linki zwracają już „anúncio não encontrado”. Zostawiam je, żeby było widać, co odpadło.</p>
         </div>
         <RemovedListings listings={removedListings} readNickname={readNickname} />
+      </section>
+
+      <section id="odrzucone">
+        <div className="section-head">
+          <h2>Odrzucone</h2>
+          <p>Domy z zaznaczeniem Odrzucone. Nie ma ich w tabeli pozostałych.</p>
+        </div>
+        <AllListingsTable
+          listings={rejectedListings}
+          selectedListingId={selectedListingId}
+          onPhotoSelect={handlePhotoSelect}
+          readNote={readNote}
+          readNickname={readNickname}
+          onNoteChange={handleNoteChange}
+          readPhones={readPhones}
+          readPhoneDraft={readPhoneDraft}
+          onPhoneChange={handlePhoneChange}
+          isReadOnly={isReadOnly}
+          emptyMessage="Żadne ogłoszenie nie jest odrzucone."
+        />
       </section>
     </main>
   );

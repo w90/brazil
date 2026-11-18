@@ -9,13 +9,13 @@ export const RemovedListings = (props: Props) => {
   const { listings, readNickname } = props;
 
   function renderRemoved(listing: ScoredListing) {
-    const nickname = readNickname(listing.id);
-    const hasNickname = nickname.length > 0;
+    const trimmedNickname = readNickname(listing.id).trim();
+    const hasNickname = trimmedNickname.length > 0;
 
     return (
       <li key={listing.id}>
         <div className="removed__name">
-          {hasNickname ? <p className="property__nickname">{nickname}</p> : null}
+          {hasNickname ? <p className="property__nickname">{trimmedNickname}</p> : null}
           <a href={listing.url} target="_blank" rel="noreferrer">
             {listing.title}
           </a>

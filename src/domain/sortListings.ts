@@ -151,60 +151,60 @@ export function sortHeading(sortKey: ListingSortKey, direction: ListingSortDirec
   const isPrice = sortKey === "price";
   const isRating = sortKey === "rating";
   if (isPrice && isAscending) {
-    return "Wszystkie, od najtańszych";
+    return "Pozostałe, od najtańszych";
   }
 
   if (isPrice) {
-    return "Wszystkie, od najdroższych";
+    return "Pozostałe, od najdroższych";
   }
 
   if (isRating && isAscending) {
-    return "Wszystkie, od najniższej oceny";
+    return "Pozostałe, od najniższej oceny";
   }
 
   if (isRating) {
-    return "Wszystkie, od najwyższej oceny";
+    return "Pozostałe, od najwyższej oceny";
   }
 
   const isSeller = sortKey === "seller";
   if (isSeller && isAscending) {
-    return "Wszystkie, według agencji A–Z";
+    return "Pozostałe, według agencji A–Z";
   }
 
   if (isSeller) {
-    return "Wszystkie, według agencji Z–A";
+    return "Pozostałe, według agencji Z–A";
   }
 
   const isHighlighted = sortKey === "highlighted";
   if (isHighlighted && isAscending) {
-    return "Wszystkie, najpierw bez wyróżnienia";
+    return "Pozostałe, najpierw bez wyróżnienia";
   }
 
   if (isHighlighted) {
-    return "Wszystkie, najpierw wyróżnione";
+    return "Pozostałe, najpierw wyróżnione";
   }
 
   const isContacted = sortKey === "contacted";
   if (isContacted && isAscending) {
-    return "Wszystkie, najpierw bez kontaktu";
+    return "Pozostałe, najpierw bez kontaktu";
   }
 
   if (isContacted) {
-    return "Wszystkie, najpierw skontaktowane";
+    return "Pozostałe, najpierw skontaktowane";
   }
 
   const isComment = sortKey === "comment";
   if (isComment && isAscending) {
-    return "Wszystkie, najpierw bez komentarza";
+    return "Pozostałe, najpierw bez komentarza";
   }
 
   if (isComment) {
-    return "Wszystkie, najpierw z komentarzem";
+    return "Pozostałe, najpierw z komentarzem";
   }
 
   if (isAscending) {
-    return "Wszystkie, od najniższej jakości";
+    return "Pozostałe, od najniższej jakości";
   }
 
-  return "Wszystkie, od najwyższej jakości";
+  return "Pozostałe, od najwyższej jakości";
 }

@@ -12,11 +12,12 @@ export const AppHeader = () => {
       </div>
       <nav className="hero__nav">
         <a href="#mapa">Mapa</a>
-        <a href="#oznaczone">Z komentarzem</a>
-        <a href="#wszystkie">Wszystkie</a>
+        <a href="#oznaczone">Wyróżnione</a>
+        <a href="#wszystkie">Pozostałe</a>
         <a href="#telefony">Telefony biur</a>
         <a href="#top">25 najlepszych</a>
         <a href="#zdjete">Zdjęte</a>
+        <a href="#odrzucone">Odrzucone</a>
       </nav>
     </header>
   );

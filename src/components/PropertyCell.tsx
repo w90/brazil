@@ -11,7 +11,8 @@ export const PropertyCell = (props: Props) => {
   const { listing, nickname, onPhotoSelect } = props;
   const image = listing.image ?? "";
   const hasImage = image.length > 0;
-  const hasNickname = nickname.length > 0;
+  const trimmedNickname = nickname.trim();
+  const hasNickname = trimmedNickname.length > 0;
   const canSelectOnMap = Boolean(onPhotoSelect);
 
   function hideBrokenPhoto(event: SyntheticEvent<HTMLImageElement>) {
@@ -43,7 +44,7 @@ export const PropertyCell = (props: Props) => {
       ) : null}
       {!hasImage ? <span className="property__photo property__photo--empty" /> : null}
       <div className="property__copy">
-        {hasNickname ? <p className="property__nickname">{nickname}</p> : null}
+        {hasNickname ? <p className="property__nickname">{trimmedNickname}</p> : null}
         <a className="property__title" href={listing.url} target="_blank" rel="noreferrer">
           {listing.title}
         </a>

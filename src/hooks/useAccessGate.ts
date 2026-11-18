@@ -5,6 +5,12 @@ const storageKey = "brazil.view";
 
 function readStoredMode(): AccessMode | null {
   try {
+    const savedMode = modeFromStorage(window.localStorage.getItem(storageKey));
+    const isFullAccess = savedMode === "full";
+    if (isFullAccess) {
+      return savedMode;
+    }
+
     return modeFromStorage(window.sessionStorage.getItem(storageKey));
   } catch {
     return null;
@@ -12,6 +18,17 @@ function readStoredMode(): AccessMode | null {
 }
 
 function storeMode(mode: AccessMode): void {
+  const isFullAccess = mode === "full";
+  if (isFullAccess) {
+    try {
+      window.localStorage.setItem(storageKey, storageValueForMode(mode));
+    } catch {
+      return;
+    }
+
+    return;
+  }
+
   try {
     window.sessionStorage.setItem(storageKey, storageValueForMode(mode));
   } catch {
