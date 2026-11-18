@@ -6,6 +6,9 @@ create table if not exists public.listing_star_ratings (
   primary key (listing_id, user_id)
 );
 
+comment on table public.listing_star_ratings is
+  'Jedna ocena na osobę i ogłoszenie. Zmiana oceny aktualizuje ten sam wiersz.';
+
 alter table public.listing_star_ratings enable row level security;
 
 grant select, insert, update, delete on public.listing_star_ratings to anon, authenticated;

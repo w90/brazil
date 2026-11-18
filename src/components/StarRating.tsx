@@ -49,7 +49,6 @@ export const StarRating = (props: Props) => {
     function handleStarClick() {
       const isSameRating = starRating.ownStars === starValue;
       if (isSameRating) {
-        onRate(listingId, null);
         return;
       }
 

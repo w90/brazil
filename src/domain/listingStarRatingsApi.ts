@@ -140,7 +140,9 @@ export async function uploadListingStarRatings(client: SupabaseClient, rows: Sta
   }
 
   const remoteRows = rows.map(toStarRatingRemoteRow);
-  const { error } = await client.from("listing_star_ratings").upsert(remoteRows);
+  const { error } = await client.from("listing_star_ratings").upsert(remoteRows, {
+    onConflict: "listing_id,user_id",
+  });
   if (error) {
     throw error;
   }
@@ -166,7 +168,9 @@ export async function persistRemoteStarRating(
     return;
   }
 
-  const { error } = await client.from("listing_star_ratings").upsert(toStarRatingRemoteRow(row));
+  const { error } = await client.from("listing_star_ratings").upsert(toStarRatingRemoteRow(row), {
+    onConflict: "listing_id,user_id",
+  });
   if (error) {
     throw error;
   }
