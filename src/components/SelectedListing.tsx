@@ -7,11 +7,26 @@ interface Props {
   listing: ScoredListing | null;
   onPhotoSelect: (listingId: string) => void;
   readNote: (listingId: string) => ListingNote;
+  readNickname: (listingId: string) => string;
   onNoteChange: (listingId: string, note: ListingNote) => void;
+  readPhones: (listing: ScoredListing) => string[];
+  readPhoneDraft: (listing: ScoredListing) => string;
+  onPhoneChange: (sellerKey: string, phoneText: string) => void;
+  isReadOnly: boolean;
 }
 
 export const SelectedListing = (props: Props) => {
-  const { listing, onPhotoSelect, readNote, onNoteChange } = props;
+  const {
+    listing,
+    onPhotoSelect,
+    readNote,
+    readNickname,
+    onNoteChange,
+    readPhones,
+    readPhoneDraft,
+    onPhoneChange,
+    isReadOnly,
+  } = props;
   const [openListingId, setOpenListingId] = useState<string | null>(null);
 
   useEffect(
@@ -48,15 +63,15 @@ export const SelectedListing = (props: Props) => {
         <table>
           <thead>
             <tr>
-              <th>Notatka</th>
+              {isReadOnly ? null : <th>Notatka</th>}
               <th>Dom</th>
               <th>Cena</th>
+              <th>Agencja i kontakt</th>
               <th>R$/m²</th>
               <th>Ocena</th>
               <th>Jakość</th>
               <th>Okolica</th>
               <th>Metraż</th>
-              <th>Agencja i kontakt</th>
               <th>Atuty</th>
               <th>Condomínio</th>
               <th>Obniżka</th>
@@ -69,9 +84,14 @@ export const SelectedListing = (props: Props) => {
               isSelected={false}
               isDescriptionOpen={isDescriptionOpen}
               note={readNote(listing.id)}
+              nickname={readNickname(listing.id)}
+              phones={readPhones(listing)}
+              phoneDraft={readPhoneDraft(listing)}
+              isReadOnly={isReadOnly}
               onPhotoSelect={onPhotoSelect}
               onToggleDescription={handleToggleDescription}
               onNoteChange={onNoteChange}
+              onPhoneChange={onPhoneChange}
             />
           </tbody>
         </table>

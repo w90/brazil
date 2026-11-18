@@ -41,7 +41,14 @@ export interface ScoredListing extends Listing {
   isPriceWellAboveMedian: boolean;
 }
 
-export type ListingSortKey = "price" | "rating" | "quality";
+export type ListingSortKey =
+  | "price"
+  | "rating"
+  | "quality"
+  | "seller"
+  | "highlighted"
+  | "contacted"
+  | "comment";
 
 export type ListingSortDirection = "asc" | "desc";
 

@@ -44,7 +44,18 @@ export const FilterBar = (props: Props) => {
     const isPrice = value === "price";
     const isRating = value === "rating";
     const isQuality = value === "quality";
-    return isPrice || isRating || isQuality;
+    const isSeller = value === "seller";
+    const isHighlighted = value === "highlighted";
+    const isContacted = value === "contacted";
+    const isComment = value === "comment";
+    return isPrice || isRating || isQuality || isSeller || isHighlighted || isContacted || isComment;
+  }
+
+  function isNoteSort(value: ListingSortKey): boolean {
+    const isHighlighted = value === "highlighted";
+    const isContacted = value === "contacted";
+    const isComment = value === "comment";
+    return isHighlighted || isContacted || isComment;
   }
 
   function isSortDirection(value: string): value is ListingSortDirection {
@@ -56,6 +67,12 @@ export const FilterBar = (props: Props) => {
   function handleSortKeyChange(event: ChangeEvent<HTMLSelectElement>) {
     const value = event.target.value;
     if (!isSortKey(value)) {
+      return;
+    }
+
+    const shouldShowMatchesFirst = isNoteSort(value);
+    if (shouldShowMatchesFirst) {
+      onChange({ ...filters, sortKey: value, sortDirection: "desc" });
       return;
     }
 
@@ -101,6 +118,10 @@ export const FilterBar = (props: Props) => {
           <option value="price">Cena</option>
           <option value="rating">Ocena</option>
           <option value="quality">Jakość</option>
+          <option value="seller">Agencja / kontakt</option>
+          <option value="highlighted">Wyróżnione</option>
+          <option value="contacted">Skontaktowałem się</option>
+          <option value="comment">Ma komentarz</option>
         </select>
       </label>
       <label className="filters__field">

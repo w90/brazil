@@ -8,11 +8,30 @@ interface Props {
   selectedListingId: string | null;
   onPhotoSelect: (listingId: string) => void;
   readNote: (listingId: string) => ListingNote;
+  readNickname: (listingId: string) => string;
   onNoteChange: (listingId: string, note: ListingNote) => void;
+  readPhones: (listing: ScoredListing) => string[];
+  readPhoneDraft: (listing: ScoredListing) => string;
+  onPhoneChange: (sellerKey: string, phoneText: string) => void;
+  isReadOnly: boolean;
+  emptyMessage?: string;
 }
 
 export const AllListingsTable = (props: Props) => {
-  const { listings, selectedListingId, onPhotoSelect, readNote, onNoteChange } = props;
+  const {
+    listings,
+    selectedListingId,
+    onPhotoSelect,
+    readNote,
+    readNickname,
+    onNoteChange,
+    readPhones,
+    readPhoneDraft,
+    onPhoneChange,
+    isReadOnly,
+    emptyMessage,
+  } = props;
+  const emptyLabel = emptyMessage ?? "Żadne ogłoszenie nie pasuje do filtra.";
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const isEmpty = listings.length === 0;
 
@@ -39,13 +58,18 @@ export const AllListingsTable = (props: Props) => {
         onPhotoSelect={onPhotoSelect}
         onToggleDescription={toggleDescription}
         note={readNote(listing.id)}
+        nickname={readNickname(listing.id)}
         onNoteChange={onNoteChange}
+        phones={readPhones(listing)}
+        phoneDraft={readPhoneDraft(listing)}
+        isReadOnly={isReadOnly}
+        onPhoneChange={onPhoneChange}
       />
     );
   }
 
   if (isEmpty) {
-    return <p className="empty">Żadne ogłoszenie nie pasuje do filtra.</p>;
+    return <p className="empty">{emptyLabel}</p>;
   }
 
   return (
@@ -53,15 +77,15 @@ export const AllListingsTable = (props: Props) => {
       <table>
         <thead>
           <tr>
-            <th>Notatka</th>
+            {isReadOnly ? null : <th>Notatka</th>}
             <th>Dom</th>
             <th>Cena</th>
+            <th>Agencja i kontakt</th>
             <th>R$/m²</th>
             <th>Ocena</th>
             <th>Jakość</th>
             <th>Okolica</th>
             <th>Metraż</th>
-            <th>Agencja i kontakt</th>
             <th>Atuty</th>
             <th>Condomínio</th>
             <th>Obniżka</th>

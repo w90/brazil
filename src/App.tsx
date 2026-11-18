@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import listingsJson from "./data/listings.json";
+import { AccessGate } from "./components/AccessGate";
+import { AddListingForm } from "./components/AddListingForm";
 import { AgencyPhoneList } from "./components/AgencyPhoneList";
 import { AllListingsTable } from "./components/AllListingsTable";
 import { AppHeader } from "./components/AppHeader";
@@ -8,8 +10,17 @@ import { ListingsMap } from "./components/ListingsMap";
 import { RemovedListings } from "./components/RemovedListings";
 import { ScoreLegend } from "./components/ScoreLegend";
 import { SelectedListing } from "./components/SelectedListing";
+import { SiteIntro } from "./components/SiteIntro";
 import { TopPicksTable } from "./components/TopPicksTable";
+import { phoneDraftForListing, resolveAgencyPhones } from "./domain/agencyPhoneKey";
+import { importOlxListing } from "./domain/fetchOlxListing";
+import { findListingById, mergeListings } from "./domain/mergeListings";
+import { readOlxListingId } from "./domain/olxUrl";
 import { medianPricePerSquareMeter, scoreListings } from "./domain/scoreListings";
+import { useAccessGate } from "./hooks/useAccessGate";
+import { useAgencyPhones } from "./hooks/useAgencyPhones";
+import { useCustomListings } from "./hooks/useCustomListings";
+import { useListingNicknames } from "./hooks/useListingNicknames";
 import { useListingNotes } from "./hooks/useListingNotes";
 import {
   filterListings,
@@ -21,14 +32,12 @@ import {
 import { sortHeading, sortListings } from "./domain/sortListings";
 import type { Listing, ListingFilters, ScoredListing } from "./types";
 
-const listings = listingsJson as Listing[];
+const baseListings = listingsJson as Listing[];
 const nowSeconds = Math.floor(Date.now() / 1000);
-const scoredListings = scoreListings(listings, nowSeconds);
-const pricedListings = selectPricedListings(scoredListings);
-const topListings = selectTopListings(scoredListings, 25);
-const removedListings = scoredListings.filter(isRemovedListing);
-const neighborhoods = neighborhoodOptions(scoredListings);
-const medianMeterPrice = medianPricePerSquareMeter(scoredListings);
+
+function readListingId(listing: ScoredListing): string {
+  return listing.id;
+}
 
 function readSeller(listing: ScoredListing): string {
   return listing.seller ?? "";
@@ -37,8 +46,6 @@ function readSeller(listing: ScoredListing): string {
 function hasSeller(seller: string): boolean {
   return seller.length > 0;
 }
-
-const sellers = pricedListings.map(readSeller).filter(hasSeller);
 
 const initialFilters: ListingFilters = {
   query: "",
@@ -58,7 +65,72 @@ export const App = () => {
   const [focusToken, setFocusToken] = useState(0);
   const [selectionSource, setSelectionSource] = useState<"map" | "list" | null>(null);
   const selectionRef = useRef<HTMLDivElement | null>(null);
+  const { isLocked, isReadOnly, handleUnlock } = useAccessGate();
   const { notesById, readNote, handleNoteChange, isNotesSaveFailed } = useListingNotes();
+  const { customListings, addCustomListing, isListingsSaveFailed } = useCustomListings();
+  const { phoneTextBySeller, handlePhoneChange, isPhonesSaveFailed } = useAgencyPhones();
+  const listings = mergeListings(baseListings, customListings);
+  const scoredListings = scoreListings(listings, nowSeconds);
+  const pricedListings = selectPricedListings(scoredListings);
+  const topListings = selectTopListings(scoredListings, 25);
+  const removedListings = scoredListings.filter(isRemovedListing);
+  const neighborhoods = neighborhoodOptions(scoredListings);
+  const medianMeterPrice = medianPricePerSquareMeter(scoredListings);
+  const sellers = pricedListings.map(readSeller).filter(hasSeller);
+  const listingIdKey = scoredListings.map(readListingId).join("\n");
+  const listingIds = useMemo(function rememberListingIds() {
+    const isEmpty = listingIdKey.length === 0;
+    if (isEmpty) {
+      return [];
+    }
+
+    return listingIdKey.split("\n");
+  }, [listingIdKey]);
+  const { nicknames: nicknamesById, isNicknamesSaveFailed } = useListingNicknames(listingIds);
+  const isDatabaseSaveFailed =
+    isNotesSaveFailed || isPhonesSaveFailed || isListingsSaveFailed || isNicknamesSaveFailed;
+
+  function readPhones(listing: ScoredListing): string[] {
+    return resolveAgencyPhones(listing, phoneTextBySeller);
+  }
+
+  function readPhoneDraft(listing: ScoredListing): string {
+    return phoneDraftForListing(listing, phoneTextBySeller);
+  }
+
+  function readSellerPhones(seller: string): string[] {
+    return resolveAgencyPhones({ id: seller, seller }, phoneTextBySeller);
+  }
+
+  function readNickname(listingId: string): string {
+    return nicknamesById[listingId] ?? "";
+  }
+
+  async function handleImportListing(pageUrl: string): Promise<string> {
+    const requestedId = readOlxListingId(pageUrl);
+    const existingListing = findListingById(scoredListings, requestedId);
+    if (existingListing) {
+      setSelectedListingId(existingListing.id);
+      setSelectionSource("list");
+      setFocusToken(increaseFocusToken);
+      return "To ogłoszenie już jest na liście.";
+    }
+
+    const listing = await importOlxListing(pageUrl);
+    const importedListing = findListingById(scoredListings, listing.id);
+    if (importedListing) {
+      setSelectedListingId(importedListing.id);
+      setSelectionSource("list");
+      setFocusToken(increaseFocusToken);
+      return "To ogłoszenie już jest na liście.";
+    }
+
+    addCustomListing(listing);
+    setSelectedListingId(listing.id);
+    setSelectionSource("list");
+    setFocusToken(increaseFocusToken);
+    return `Dodano: ${listing.title}`;
+  }
 
   function isVisibleOnMap(listing: ScoredListing): boolean {
     const note = notesById[listing.id];
@@ -93,7 +165,20 @@ export const App = () => {
     filterListings(pricedListings, filters),
     filters.sortKey,
     filters.sortDirection,
+    notesById,
   );
+
+  function isMarkedListing(listing: ScoredListing): boolean {
+    const note = notesById[listing.id];
+    if (!note) {
+      return false;
+    }
+
+    const hasComment = note.comment.trim().length > 0;
+    return hasComment || note.isHighlighted;
+  }
+
+  const markedListings = sortListings(pricedListings.filter(isMarkedListing), "price", "asc", notesById);
 
   function matchesSelected(listing: ScoredListing): boolean {
     return listing.id === selectedListingId;
@@ -145,14 +230,18 @@ export const App = () => {
     [selectedListingId, selectionSource],
   );
 
+  if (isLocked) {
+    return <AccessGate onUnlock={handleUnlock} />;
+  }
+
   return (
     <main>
-      <AppHeader activeCount={pricedListings.length} removedCount={removedListings.length} scannedOn="17 listopada 2026" />
-      {isNotesSaveFailed ? (
-        <p className="notes-error">Nie udało się połączyć z bazą notatek. Wpisy zostają na tym urządzeniu.</p>
+      <AppHeader />
+      {isDatabaseSaveFailed ? (
+        <p className="notes-error">
+          Nie udało się zapisać w bazie. Notatki, telefony, ogłoszenia i pseudonimy zostają na tym urządzeniu.
+        </p>
       ) : null}
-      <ScoreLegend medianPricePerSquareMeter={medianMeterPrice} />
-
       <section id="mapa">
         <div className="section-head">
           <h2>Mapa ogłoszeń</h2>
@@ -175,28 +264,45 @@ export const App = () => {
             listing={selectedListing}
             onPhotoSelect={handlePhotoSelect}
             readNote={readNote}
+            readNickname={readNickname}
             onNoteChange={handleNoteChange}
+            readPhones={readPhones}
+            readPhoneDraft={readPhoneDraft}
+            onPhoneChange={handlePhoneChange}
+            isReadOnly={isReadOnly}
           />
         </div>
       </section>
 
-      <section id="telefony">
+      <section id="oznaczone">
         <div className="section-head">
-          <h2>Telefony biur</h2>
-          <p>
-            Numer, który na OLX jest ucięty, wzięty ze strony albo wizytówki tego samego biura.
-            Kliknięcie otwiera czat w aplikacji WhatsApp. Do każdego numeru dopisany jest kierunkowy
-            Brazylii, +55.
-          </p>
+          <h2>Z komentarzem lub wyróżnione</h2>
+          <p>Domy, przy których jest komentarz albo zaznaczenie Wyróżnione.</p>
         </div>
-        <AgencyPhoneList sellers={sellers} />
+        <AllListingsTable
+          listings={markedListings}
+          selectedListingId={selectedListingId}
+          onPhotoSelect={handlePhotoSelect}
+          readNote={readNote}
+          readNickname={readNickname}
+          onNoteChange={handleNoteChange}
+          readPhones={readPhones}
+          readPhoneDraft={readPhoneDraft}
+          onPhoneChange={handlePhoneChange}
+          isReadOnly={isReadOnly}
+          emptyMessage="Żadne ogłoszenie nie ma komentarza ani wyróżnienia."
+        />
       </section>
+
+      <SiteIntro activeCount={pricedListings.length} removedCount={removedListings.length} scannedOn="17 listopada 2026" />
+      <ScoreLegend medianPricePerSquareMeter={medianMeterPrice} />
 
       <section id="wszystkie">
         <div className="section-head">
           <h2>{sortHeading(filters.sortKey, filters.sortDirection)}</h2>
           <p>Ocena łączy jakość domu z tym, ile kosztuje metr na tle reszty listy.</p>
         </div>
+        {isReadOnly ? null : <AddListingForm onImport={handleImportListing} />}
         <FilterBar
           filters={filters}
           neighborhoods={neighborhoods}
@@ -208,16 +314,33 @@ export const App = () => {
           selectedListingId={selectedListingId}
           onPhotoSelect={handlePhotoSelect}
           readNote={readNote}
+          readNickname={readNickname}
           onNoteChange={handleNoteChange}
+          readPhones={readPhones}
+          readPhoneDraft={readPhoneDraft}
+          onPhoneChange={handlePhoneChange}
+          isReadOnly={isReadOnly}
         />
+      </section>
+
+      <section id="telefony">
+        <div className="section-head">
+          <h2>Telefony biur</h2>
+          <p>
+            Numer, który na OLX jest ucięty, wzięty ze strony albo wizytówki tego samego biura.
+            Kliknięcie otwiera czat w aplikacji WhatsApp. Do każdego numeru dopisany jest kierunkowy
+            Brazylii, +55.
+          </p>
+        </div>
+        <AgencyPhoneList sellers={sellers} readPhones={readSellerPhones} />
       </section>
 
       <section id="top">
         <div className="section-head">
           <h2>25 najlepszych jakościowo</h2>
           <p>
-            Ta sama lista, ale ułożona po domu, nie po cenie. Plaża, widok, łódź i suity wygrywają z
-            okazją cenową. Filtr powyżej tej tabeli nie zmienia.
+            Ranking z całej listy aktywnych ogłoszeń, nie tylko z tych z komentarzem. Plaża, widok,
+            łódź i suity wygrywają z okazją cenową.
           </p>
         </div>
         <TopPicksTable
@@ -225,7 +348,12 @@ export const App = () => {
           selectedListingId={selectedListingId}
           onPhotoSelect={handlePhotoSelect}
           readNote={readNote}
+          readNickname={readNickname}
           onNoteChange={handleNoteChange}
+          readPhones={readPhones}
+          readPhoneDraft={readPhoneDraft}
+          onPhoneChange={handlePhoneChange}
+          isReadOnly={isReadOnly}
         />
       </section>
 
@@ -234,7 +362,7 @@ export const App = () => {
           <h2>Zdjęte ogłoszenia</h2>
           <p>Te linki zwracają już „anúncio não encontrado”. Zostawiam je, żeby było widać, co odpadło.</p>
         </div>
-        <RemovedListings listings={removedListings} />
+        <RemovedListings listings={removedListings} readNickname={readNickname} />
       </section>
     </main>
   );

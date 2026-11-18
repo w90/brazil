@@ -13,9 +13,14 @@ interface Props {
   isSelected: boolean;
   isDescriptionOpen: boolean;
   note: ListingNote;
+  nickname: string;
+  isReadOnly: boolean;
+  phones: string[];
+  phoneDraft: string;
   onPhotoSelect: (listingId: string) => void;
   onToggleDescription: (listingId: string) => void;
   onNoteChange: (listingId: string, note: ListingNote) => void;
+  onPhoneChange: (sellerKey: string, phoneText: string) => void;
 }
 
 function bathroomLabel(value: string | null | undefined): string {
@@ -58,11 +63,25 @@ function sizeLine(listing: ScoredListing): string {
 }
 
 export const ListingTableRow = (props: Props) => {
-  const { listing, isSelected, isDescriptionOpen, note, onPhotoSelect, onToggleDescription, onNoteChange } = props;
+  const {
+    listing,
+    isSelected,
+    isDescriptionOpen,
+    note,
+    nickname,
+    isReadOnly,
+    phones,
+    phoneDraft,
+    onPhotoSelect,
+    onToggleDescription,
+    onNoteChange,
+    onPhoneChange,
+  } = props;
   const description = listing.description ?? "";
   const hasDescription = description.length > 0;
   const discount = listing.discountPercent === null ? "—" : `−${listing.discountPercent}%`;
   const rowClass = listingRowClassName(isSelected, note.isRejected);
+  const descriptionSpan = isReadOnly ? 12 : 13;
 
   function handleToggle() {
     onToggleDescription(listing.id);
@@ -71,11 +90,13 @@ export const ListingTableRow = (props: Props) => {
   return (
     <Fragment>
       <tr className={rowClass}>
+        {isReadOnly ? null : (
+          <td>
+            <ListingNoteCell listingId={listing.id} note={note} onNoteChange={onNoteChange} />
+          </td>
+        )}
         <td>
-          <ListingNoteCell listingId={listing.id} note={note} onNoteChange={onNoteChange} />
-        </td>
-        <td>
-          <PropertyCell listing={listing} onPhotoSelect={onPhotoSelect} />
+          <PropertyCell listing={listing} nickname={nickname} onPhotoSelect={onPhotoSelect} />
           {hasDescription ? (
             <button className="text-button" type="button" onClick={handleToggle}>
               {isDescriptionOpen ? "Ukryj opis" : "Pokaż opis"}
@@ -87,6 +108,15 @@ export const ListingTableRow = (props: Props) => {
           {listing.previousPrice ? (
             <span className="muted strike">{formatBrl(listing.previousPrice)}</span>
           ) : null}
+        </td>
+        <td>
+          <ContactCell
+            listing={listing}
+            phones={phones}
+            phoneDraft={phoneDraft}
+            isReadOnly={isReadOnly}
+            onPhoneChange={onPhoneChange}
+          />
         </td>
         <td className="num">{listing.pricePerSquareMeter ? formatBrl(listing.pricePerSquareMeter) : "—"}</td>
         <td>
@@ -104,9 +134,6 @@ export const ListingTableRow = (props: Props) => {
         </td>
         <td>{sizeLine(listing)}</td>
         <td>
-          <ContactCell listing={listing} />
-        </td>
-        <td>
           <TraitList traits={listing.traits} />
         </td>
         <td className="num">{formatBrl(listing.condoFee)}</td>
@@ -115,7 +142,7 @@ export const ListingTableRow = (props: Props) => {
       </tr>
       {isDescriptionOpen ? (
         <tr className="description-row">
-          <td colSpan={13}>
+          <td colSpan={descriptionSpan}>
             <p>{description}</p>
           </td>
         </tr>

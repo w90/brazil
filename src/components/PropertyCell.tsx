@@ -3,13 +3,15 @@ import type { ScoredListing } from "../types";
 
 interface Props {
   listing: ScoredListing;
+  nickname: string;
   onPhotoSelect?: (listingId: string) => void;
 }
 
 export const PropertyCell = (props: Props) => {
-  const { listing, onPhotoSelect } = props;
+  const { listing, nickname, onPhotoSelect } = props;
   const image = listing.image ?? "";
   const hasImage = image.length > 0;
+  const hasNickname = nickname.length > 0;
   const canSelectOnMap = Boolean(onPhotoSelect);
 
   function hideBrokenPhoto(event: SyntheticEvent<HTMLImageElement>) {
@@ -41,6 +43,7 @@ export const PropertyCell = (props: Props) => {
       ) : null}
       {!hasImage ? <span className="property__photo property__photo--empty" /> : null}
       <div className="property__copy">
+        {hasNickname ? <p className="property__nickname">{nickname}</p> : null}
         <a className="property__title" href={listing.url} target="_blank" rel="noreferrer">
           {listing.title}
         </a>

@@ -44,6 +44,20 @@ h2 {
   padding: 48px 0 12px;
 }
 
+.hero__brand {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.hero__logo {
+  width: 112px;
+  height: auto;
+  flex: none;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(28, 36, 31, 0.16);
+}
+
 .hero__kicker {
   margin: 0 0 8px;
   text-transform: uppercase;
@@ -65,8 +79,70 @@ h2 {
 
 .hero__nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 18px;
   margin-top: 18px;
+}
+
+.site-intro {
+  margin-top: 36px;
+}
+
+.site-intro .hero__lead,
+.site-intro .hero__note {
+  margin: 0 0 12px;
+}
+
+.gate {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.gate__card {
+  width: min(360px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 28px;
+  background: #fffdf8;
+  border-radius: 18px;
+}
+
+.gate__card h1 {
+  font-size: 40px;
+}
+
+.gate__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gate__field input {
+  border: 1px solid #d5c6ae;
+  background: #fffdf8;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.gate__card button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: #0c5c54;
+  color: #fffdf8;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gate__error {
+  margin: 0;
+  color: #8d3b32;
 }
 
 .hero__nav a {
@@ -231,6 +307,14 @@ td > strong {
   display: block;
 }
 
+.property__nickname {
+  margin: 0 0 2px;
+  color: #1a4fbf;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
 .property__title {
   font-weight: 650;
   text-decoration: none;
@@ -327,6 +411,47 @@ td > strong {
   font-size: 12px;
 }
 
+.contact__edit {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.contact__edit input {
+  border: 1px solid #d5c6ae;
+  background: #fffdf8;
+  border-radius: 10px;
+  padding: 6px 8px;
+  font: inherit;
+  width: 100%;
+}
+
+.contact__edit button,
+.add-listing button {
+  border: 0;
+  background: #0c5c54;
+  color: #fffdf8;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.add-listing {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.add-listing__message {
+  margin: 0 0 8px;
+  color: #4d463c;
+}
+
 .score {
   display: grid;
   grid-template-columns: 28px 72px;
@@ -388,6 +513,12 @@ td > strong {
   gap: 16px;
   padding: 10px 0;
   border-bottom: 1px solid #e0d2bc;
+}
+
+.removed__name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .empty {
@@ -578,6 +709,10 @@ tr.is-rejected .property__title {
 
   .hero__nav {
     flex-wrap: wrap;
+  }
+
+  .hero__logo {
+    width: 76px;
   }
 }
 
