@@ -22,6 +22,7 @@ import { useAgencyPhones } from "./hooks/useAgencyPhones";
 import { useCustomListings } from "./hooks/useCustomListings";
 import { useListingNicknames } from "./hooks/useListingNicknames";
 import { useListingNotes } from "./hooks/useListingNotes";
+import { useListingStarRatings } from "./hooks/useListingStarRatings";
 import {
   filterListings,
   isRemovedListing,
@@ -67,6 +68,7 @@ export const App = () => {
   const selectionRef = useRef<HTMLDivElement | null>(null);
   const { isLocked, isReadOnly, handleUnlock } = useAccessGate();
   const { notesById, readNote, handleNoteChange, isNotesSaveFailed } = useListingNotes();
+  const { readStarRating, handleRate, isStarRatingsSaveFailed } = useListingStarRatings();
   const { customListings, addCustomListing, isListingsSaveFailed } = useCustomListings();
   const { phoneTextBySeller, handlePhoneChange, isPhonesSaveFailed } = useAgencyPhones();
   const listings = mergeListings(baseListings, customListings);
@@ -88,7 +90,7 @@ export const App = () => {
   }, [listingIdKey]);
   const { nicknames: nicknamesById, isNicknamesSaveFailed } = useListingNicknames(listingIds);
   const isDatabaseSaveFailed =
-    isNotesSaveFailed || isPhonesSaveFailed || isListingsSaveFailed || isNicknamesSaveFailed;
+    isNotesSaveFailed || isPhonesSaveFailed || isListingsSaveFailed || isNicknamesSaveFailed || isStarRatingsSaveFailed;
 
   function readPhones(listing: ScoredListing): string[] {
     return resolveAgencyPhones(listing, phoneTextBySeller);
@@ -257,7 +259,7 @@ export const App = () => {
       <AppHeader />
       {isDatabaseSaveFailed ? (
         <p className="notes-error">
-          Nie udało się zapisać w bazie. Notatki, telefony, ogłoszenia i pseudonimy zostają na tym urządzeniu.
+          Nie udało się zapisać w bazie. Notatki, telefony, ogłoszenia, pseudonimy i oceny zostają na tym urządzeniu.
         </p>
       ) : null}
       <section id="mapa">
@@ -284,6 +286,8 @@ export const App = () => {
             readNote={readNote}
             readNickname={readNickname}
             onNoteChange={handleNoteChange}
+            readStarRating={readStarRating}
+            onRate={handleRate}
             readPhones={readPhones}
             readPhoneDraft={readPhoneDraft}
             onPhoneChange={handlePhoneChange}
@@ -304,6 +308,8 @@ export const App = () => {
           readNote={readNote}
           readNickname={readNickname}
           onNoteChange={handleNoteChange}
+          readStarRating={readStarRating}
+          onRate={handleRate}
           readPhones={readPhones}
           readPhoneDraft={readPhoneDraft}
           onPhoneChange={handlePhoneChange}
@@ -334,6 +340,8 @@ export const App = () => {
           readNote={readNote}
           readNickname={readNickname}
           onNoteChange={handleNoteChange}
+          readStarRating={readStarRating}
+          onRate={handleRate}
           readPhones={readPhones}
           readPhoneDraft={readPhoneDraft}
           onPhoneChange={handlePhoneChange}
@@ -368,6 +376,8 @@ export const App = () => {
           readNote={readNote}
           readNickname={readNickname}
           onNoteChange={handleNoteChange}
+          readStarRating={readStarRating}
+          onRate={handleRate}
           readPhones={readPhones}
           readPhoneDraft={readPhoneDraft}
           onPhoneChange={handlePhoneChange}
@@ -395,6 +405,8 @@ export const App = () => {
           readNote={readNote}
           readNickname={readNickname}
           onNoteChange={handleNoteChange}
+          readStarRating={readStarRating}
+          onRate={handleRate}
           readPhones={readPhones}
           readPhoneDraft={readPhoneDraft}
           onPhoneChange={handlePhoneChange}

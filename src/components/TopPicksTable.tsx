@@ -1,5 +1,7 @@
 import { formatBrl } from "../domain/format";
+import { PriceAmount } from "./PriceAmount";
 import { listingRowClassName, type ListingNote } from "../domain/listingNotes";
+import type { StarRatingView } from "../domain/listingStarRatings";
 import type { ScoredListing } from "../types";
 import { ContactCell } from "./ContactCell";
 import { ListingNoteCell } from "./ListingNoteCell";
@@ -13,7 +15,9 @@ interface Props {
   onPhotoSelect: (listingId: string) => void;
   readNote: (listingId: string) => ListingNote;
   readNickname: (listingId: string) => string;
+  readStarRating: (listingId: string) => StarRatingView;
   onNoteChange: (listingId: string, note: ListingNote) => void;
+  onRate: (listingId: string, stars: number | null) => void;
   readPhones: (listing: ScoredListing) => string[];
   readPhoneDraft: (listing: ScoredListing) => string;
   onPhoneChange: (sellerKey: string, phoneText: string) => void;
@@ -27,7 +31,9 @@ export const TopPicksTable = (props: Props) => {
     onPhotoSelect,
     readNote,
     readNickname,
+    readStarRating,
     onNoteChange,
+    onRate,
     readPhones,
     readPhoneDraft,
     onPhoneChange,
@@ -43,7 +49,13 @@ export const TopPicksTable = (props: Props) => {
       <tr key={listing.id} className={rowClass}>
         {isReadOnly ? null : (
           <td>
-            <ListingNoteCell listingId={listing.id} note={note} onNoteChange={onNoteChange} />
+            <ListingNoteCell
+              listingId={listing.id}
+              note={note}
+              starRating={readStarRating(listing.id)}
+              onNoteChange={onNoteChange}
+              onRate={onRate}
+            />
           </td>
         )}
         <td className="rank">{index + 1}</td>
@@ -54,7 +66,7 @@ export const TopPicksTable = (props: Props) => {
           <ScoreMeter score={listing.qualityScore} label="Jakość domu" />
         </td>
         <td className="num">
-          <strong>{formatBrl(listing.price)}</strong>
+          <PriceAmount price={listing.price} />
           <span className="muted">
             {listing.pricePerSquareMeter ? `${formatBrl(listing.pricePerSquareMeter)}/m²` : "brak m²"}
           </span>

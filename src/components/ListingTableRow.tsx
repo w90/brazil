@@ -1,6 +1,8 @@
 import { Fragment } from "react";
 import { formatBrl, formatPublishedAt } from "../domain/format";
+import { PriceAmount } from "./PriceAmount";
 import { listingRowClassName, type ListingNote } from "../domain/listingNotes";
+import type { StarRatingView } from "../domain/listingStarRatings";
 import type { ScoredListing } from "../types";
 import { ContactCell } from "./ContactCell";
 import { ListingNoteCell } from "./ListingNoteCell";
@@ -14,12 +16,14 @@ interface Props {
   isDescriptionOpen: boolean;
   note: ListingNote;
   nickname: string;
+  starRating: StarRatingView;
   isReadOnly: boolean;
   phones: string[];
   phoneDraft: string;
   onPhotoSelect: (listingId: string) => void;
   onToggleDescription: (listingId: string) => void;
   onNoteChange: (listingId: string, note: ListingNote) => void;
+  onRate: (listingId: string, stars: number | null) => void;
   onPhoneChange: (sellerKey: string, phoneText: string) => void;
 }
 
@@ -69,12 +73,14 @@ export const ListingTableRow = (props: Props) => {
     isDescriptionOpen,
     note,
     nickname,
+    starRating,
     isReadOnly,
     phones,
     phoneDraft,
     onPhotoSelect,
     onToggleDescription,
     onNoteChange,
+    onRate,
     onPhoneChange,
   } = props;
   const description = listing.description ?? "";
@@ -92,7 +98,13 @@ export const ListingTableRow = (props: Props) => {
       <tr className={rowClass}>
         {isReadOnly ? null : (
           <td>
-            <ListingNoteCell listingId={listing.id} note={note} onNoteChange={onNoteChange} />
+            <ListingNoteCell
+              listingId={listing.id}
+              note={note}
+              starRating={starRating}
+              onNoteChange={onNoteChange}
+              onRate={onRate}
+            />
           </td>
         )}
         <td>
@@ -104,10 +116,7 @@ export const ListingTableRow = (props: Props) => {
           ) : null}
         </td>
         <td className="num">
-          <strong>{formatBrl(listing.price)}</strong>
-          {listing.previousPrice ? (
-            <span className="muted strike">{formatBrl(listing.previousPrice)}</span>
-          ) : null}
+          <PriceAmount price={listing.price} previousPrice={listing.previousPrice} />
         </td>
         <td>
           <ContactCell

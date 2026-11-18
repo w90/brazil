@@ -1,14 +1,18 @@
 import type { ChangeEvent } from "react";
 import { listingCommentMaxLength, type ListingNote } from "../domain/listingNotes";
+import type { StarRatingView } from "../domain/listingStarRatings";
+import { StarRating } from "./StarRating";
 
 interface Props {
   listingId: string;
   note: ListingNote;
+  starRating: StarRatingView;
   onNoteChange: (listingId: string, note: ListingNote) => void;
+  onRate: (listingId: string, stars: number | null) => void;
 }
 
 export const ListingNoteCell = (props: Props) => {
-  const { listingId, note, onNoteChange } = props;
+  const { listingId, note, starRating, onNoteChange, onRate } = props;
 
   function handleCommentChange(event: ChangeEvent<HTMLTextAreaElement>) {
     onNoteChange(listingId, {
@@ -61,6 +65,10 @@ export const ListingNoteCell = (props: Props) => {
         {note.comment.length}/{listingCommentMaxLength}
       </span>
       <label className="listing-note__check">
+        <input type="checkbox" checked={note.isContacted} onChange={handleContactedChange} />
+        Skontaktowałem się
+      </label>
+      <label className="listing-note__check">
         <input
           type="checkbox"
           checked={note.isHighlighted}
@@ -72,10 +80,7 @@ export const ListingNoteCell = (props: Props) => {
         <input type="checkbox" checked={note.isRejected} onChange={handleRejectedChange} />
         Odrzucone
       </label>
-      <label className="listing-note__check">
-        <input type="checkbox" checked={note.isContacted} onChange={handleContactedChange} />
-        Skontaktowałem się
-      </label>
+      <StarRating listingId={listingId} starRating={starRating} onRate={onRate} />
     </div>
   );
 };
