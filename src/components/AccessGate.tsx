@@ -1,22 +1,22 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 
 interface Props {
-  onUnlock: (password: string) => boolean;
+  onUnlock: (name: string) => boolean;
 }
 
 export const AccessGate = (props: Props) => {
   const { onUnlock } = props;
-  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [isRejected, setIsRejected] = useState(false);
 
-  function handlePasswordChange(event: ChangeEvent<HTMLInputElement>) {
-    setPassword(event.target.value);
+  function handleNameChange(event: ChangeEvent<HTMLInputElement>) {
+    setName(event.target.value.toLowerCase());
     setIsRejected(false);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const isAccepted = onUnlock(password);
+    const isAccepted = onUnlock(name);
     if (isAccepted) {
       return;
     }
@@ -29,11 +29,18 @@ export const AccessGate = (props: Props) => {
       <form className="gate__card" onSubmit={handleSubmit}>
         <h1>Wejście</h1>
         <label className="gate__field">
-          <span>Hasło</span>
-          <input type="password" value={password} onChange={handlePasswordChange} autoComplete="current-password" />
+          <span>Imię</span>
+          <input
+            type="text"
+            value={name}
+            onChange={handleNameChange}
+            autoComplete="given-name"
+            autoCapitalize="none"
+            spellCheck={false}
+          />
         </label>
         <button type="submit">Wejdź</button>
-        {isRejected ? <p className="gate__error">Złe hasło.</p> : null}
+        {isRejected ? <p className="gate__error">Nie znam tego imienia.</p> : null}
       </form>
     </main>
   );

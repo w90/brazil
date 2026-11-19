@@ -10,6 +10,7 @@ import { ListingsMap } from "./components/ListingsMap";
 import { RemovedListings } from "./components/RemovedListings";
 import { ScoreLegend } from "./components/ScoreLegend";
 import { SelectedListing } from "./components/SelectedListing";
+import { SaveNotice } from "./components/SaveNotice";
 import { SiteIntro } from "./components/SiteIntro";
 import { TopPicksTable } from "./components/TopPicksTable";
 import { phoneDraftForListing, resolveAgencyPhones } from "./domain/agencyPhoneKey";
@@ -66,11 +67,11 @@ export const App = () => {
   const [focusToken, setFocusToken] = useState(0);
   const [selectionSource, setSelectionSource] = useState<"map" | "list" | null>(null);
   const selectionRef = useRef<HTMLDivElement | null>(null);
-  const { isLocked, isReadOnly, handleUnlock } = useAccessGate();
-  const { notesById, readNote, handleNoteChange, isNotesSaveFailed } = useListingNotes();
-  const { readStarRating, handleRate, isStarRatingsSaveFailed } = useListingStarRatings();
-  const { customListings, addCustomListing, isListingsSaveFailed } = useCustomListings();
-  const { phoneTextBySeller, handlePhoneChange, isPhonesSaveFailed } = useAgencyPhones();
+  const { isLocked, isReadOnly, visitorName, handleUnlock } = useAccessGate();
+  const { notesById, readNote, handleNoteChange, isNotesSaveFailed } = useListingNotes(visitorName);
+  const { readStarRating, handleRate, isStarRatingsSaveFailed } = useListingStarRatings(visitorName);
+  const { customListings, addCustomListing, isListingsSaveFailed } = useCustomListings(visitorName);
+  const { phoneTextBySeller, handlePhoneChange, isPhonesSaveFailed } = useAgencyPhones(visitorName);
   const listings = mergeListings(baseListings, customListings);
   const scoredListings = scoreListings(listings, nowSeconds);
   const pricedListings = selectPricedListings(scoredListings);
@@ -88,7 +89,7 @@ export const App = () => {
 
     return listingIdKey.split("\n");
   }, [listingIdKey]);
-  const { nicknames: nicknamesById, isNicknamesSaveFailed } = useListingNicknames(listingIds);
+  const { nicknames: nicknamesById, isNicknamesSaveFailed } = useListingNicknames(listingIds, visitorName);
   const isDatabaseSaveFailed =
     isNotesSaveFailed || isPhonesSaveFailed || isListingsSaveFailed || isNicknamesSaveFailed || isStarRatingsSaveFailed;
 
@@ -256,7 +257,8 @@ export const App = () => {
 
   return (
     <main>
-      <AppHeader />
+      <AppHeader visitorName={visitorName} />
+      <SaveNotice />
       {isDatabaseSaveFailed ? (
         <p className="notes-error">
           Nie udało się zapisać w bazie. Notatki, telefony, ogłoszenia, pseudonimy i oceny zostają na tym urządzeniu.

@@ -1,9 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ListingNicknamesById } from "./listingNicknames";
+import { authorNameField } from "./visitorName";
 
 interface ListingNicknameRow {
   listing_id: string;
   nickname: string;
+  author_name: string;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -71,7 +73,7 @@ export async function uploadMissingNicknames(
       continue;
     }
 
-    rows.push({ listing_id: listingId, nickname });
+    rows.push({ listing_id: listingId, nickname, ...authorNameField() });
   }
 
   const hasRows = rows.length > 0;

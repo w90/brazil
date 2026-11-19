@@ -1,4 +1,6 @@
+import { notifySaved } from "./saveNotice";
 import { getListingNotesClient } from "./supabaseClient";
+import { visitorRequestHeaders } from "./visitorName";
 import { isOlxListingUrl } from "./olxUrl";
 import { parseOlxListing } from "./parseOlxListing";
 import type { Listing } from "../types";
@@ -6,7 +8,9 @@ import type { Listing } from "../types";
 async function fetchOlxHtml(pageUrl: string): Promise<string> {
   const isDevServer = import.meta.env.DEV;
   if (isDevServer) {
-    const response = await fetch(`/api/olx-listing?url=${encodeURIComponent(pageUrl)}`);
+    const response = await fetch(`/api/olx-listing?url=${encodeURIComponent(pageUrl)}`, {
+      headers: visitorRequestHeaders(),
+    });
     const isOk = response.ok;
     if (!isOk) {
       throw new Error("Nie udało się pobrać ogłoszenia z OLX.");
@@ -29,6 +33,7 @@ async function fetchOlxHtml(pageUrl: string): Promise<string> {
       "Content-Type": "application/json",
       apikey: supabaseAnonKey,
       Authorization: `Bearer ${supabaseAnonKey}`,
+      ...visitorRequestHeaders(),
     },
     body: JSON.stringify({ url: pageUrl }),
   });
@@ -37,6 +42,7 @@ async function fetchOlxHtml(pageUrl: string): Promise<string> {
     throw new Error("Nie udało się pobrać ogłoszenia z OLX.");
   }
 
+  notifySaved();
   return response.text();
 }
 

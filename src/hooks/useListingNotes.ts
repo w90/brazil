@@ -19,7 +19,7 @@ import {
 } from "../domain/listingNotes";
 import { getListingNotesClient } from "../domain/supabaseClient";
 
-export function useListingNotes() {
+export function useListingNotes(visitorName: string) {
   const [notesById, setNotesById] = useState<ListingNotesById>(loadListingNotes);
   const [isNotesSaveFailed, setIsNotesSaveFailed] = useState(false);
   const notesRef = useRef(notesById);
@@ -36,6 +36,11 @@ export function useListingNotes() {
 
   useEffect(
     function loadRemoteListingNotes() {
+      const hasVisitor = visitorName.length > 0;
+      if (!hasVisitor) {
+        return;
+      }
+
       const client = getListingNotesClient();
       if (!client) {
         return;
@@ -83,11 +88,16 @@ export function useListingNotes() {
         isCancelled = true;
       };
     },
-    [],
+    [visitorName],
   );
 
   useEffect(
     function subscribeToListingNotes() {
+      const hasVisitor = visitorName.length > 0;
+      if (!hasVisitor) {
+        return;
+      }
+
       const client = getListingNotesClient();
       if (!client) {
         return;
@@ -110,7 +120,7 @@ export function useListingNotes() {
         void client.removeChannel(channel);
       };
     },
-    [],
+    [visitorName],
   );
 
   function readNote(listingId: string): ListingNote {

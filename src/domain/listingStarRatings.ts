@@ -42,7 +42,7 @@ function createRaterId(): string {
 export function readRaterId(): string {
   try {
     const savedId = window.localStorage.getItem(raterStorageKey);
-    const hasSavedId = typeof savedId === "string" && savedId.length >= 8 && savedId.length <= 80;
+    const hasSavedId = typeof savedId === "string" && savedId.length >= 3 && savedId.length <= 80;
     if (hasSavedId && savedId) {
       return savedId;
     }
@@ -64,7 +64,7 @@ function readStoredRow(value: unknown): StarRatingRow | null {
 
   const row = value as StarRatingRow;
   const hasListingId = typeof row.listingId === "string" && row.listingId.length > 0;
-  const hasUserId = typeof row.userId === "string" && row.userId.length >= 8 && row.userId.length <= 80;
+  const hasUserId = typeof row.userId === "string" && row.userId.length >= 3 && row.userId.length <= 80;
   const hasStars = typeof row.stars === "number" && isValidStarCount(row.stars);
   const isValid = hasListingId && hasUserId && hasStars;
   if (!isValid) {

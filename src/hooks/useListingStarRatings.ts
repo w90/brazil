@@ -12,7 +12,6 @@ import {
   loadStoredStarRatings,
   mergeLoadedStarRatings,
   omitStarRating,
-  readRaterId,
   saveStoredStarRatings,
   starRatingKey,
   summarizeStarRating,
@@ -22,6 +21,7 @@ import {
   type StarRatingsByKey,
 } from "../domain/listingStarRatings";
 import { getListingNotesClient } from "../domain/supabaseClient";
+import { readVisitorName } from "../domain/visitorName";
 
 function readNextRating(listingId: string, userId: string, stars: number | null): StarRatingRow | null {
   if (stars === null || !isValidStarCount(stars)) {
@@ -35,9 +35,15 @@ function readNextRating(listingId: string, userId: string, stars: number | null)
   };
 }
 
-export function useListingStarRatings() {
+function readCurrentVisitorId(): string {
+  return readVisitorName() ?? "";
+}
+
+export function useListingStarRatings(visitorName: string) {
   const [ratingsByKey, setRatingsByKey] = useState<StarRatingsByKey>(loadStoredStarRatings);
-  const [userId] = useState(readRaterId);
+  const storedVisitorId = readCurrentVisitorId();
+  const hasNamedVisitor = visitorName.length > 0;
+  const userId = hasNamedVisitor ? visitorName : storedVisitorId;
   const [isStarRatingsSaveFailed, setIsStarRatingsSaveFailed] = useState(false);
   const ratingsRef = useRef(ratingsByKey);
   const pendingKeysRef = useRef(new Set<string>());
@@ -53,6 +59,11 @@ export function useListingStarRatings() {
 
   useEffect(
     function loadRemoteStarRatings() {
+      const hasVisitor = visitorName.length > 0;
+      if (!hasVisitor) {
+        return;
+      }
+
       const client = getListingNotesClient();
       if (!client) {
         return;
@@ -95,11 +106,16 @@ export function useListingStarRatings() {
         isCancelled = true;
       };
     },
-    [userId],
+    [userId, visitorName],
   );
 
   useEffect(
     function subscribeToStarRatings() {
+      const hasVisitor = visitorName.length > 0;
+      if (!hasVisitor) {
+        return;
+      }
+
       const client = getListingNotesClient();
       if (!client) {
         return;
@@ -122,7 +138,7 @@ export function useListingStarRatings() {
         void client.removeChannel(channel);
       };
     },
-    [],
+    [visitorName],
   );
 
   function readStarRating(listingId: string): StarRatingView {

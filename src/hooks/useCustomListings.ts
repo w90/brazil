@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { getListingNotesClient } from "../domain/supabaseClient";
+import { authorNameField } from "../domain/visitorName";
 import type { Listing } from "../types";
 
 const storageKey = "brazil.custom-listings";
@@ -68,7 +69,7 @@ function saveCustomListings(listings: Listing[]): void {
   }
 }
 
-export function useCustomListings() {
+export function useCustomListings(visitorName: string) {
   const [customListings, setCustomListings] = useState<Listing[]>(loadCustomListings);
   const [isListingsSaveFailed, setIsListingsSaveFailed] = useState(false);
 
@@ -81,6 +82,11 @@ export function useCustomListings() {
 
   useEffect(
     function loadRemoteCustomListings() {
+      const hasVisitor = visitorName.length > 0;
+      if (!hasVisitor) {
+        return;
+      }
+
       const client = getListingNotesClient();
       if (!client) {
         return;
@@ -120,7 +126,7 @@ export function useCustomListings() {
         const shouldUploadLocal = remoteListings.length === 0 && localListings.length > 0;
         if (shouldUploadLocal) {
           const rows = localListings.map(function toRow(listing) {
-            return { listing_id: listing.id, payload: listing };
+            return { listing_id: listing.id, payload: listing, ...authorNameField() };
           });
           const { error: uploadError } = await remoteClient.from("custom_listings").upsert(rows);
           if (uploadError) {
@@ -159,7 +165,7 @@ export function useCustomListings() {
         isCancelled = true;
       };
     },
-    [],
+    [visitorName],
   );
 
   function addCustomListing(listing: Listing) {
@@ -182,7 +188,7 @@ export function useCustomListings() {
     async function saveListing(remoteClient: SupabaseClient) {
       const { error } = await remoteClient
         .from("custom_listings")
-        .upsert({ listing_id: listing.id, payload: listing });
+        .upsert({ listing_id: listing.id, payload: listing, ...authorNameField() });
       if (error) {
         setIsListingsSaveFailed(true);
         return;

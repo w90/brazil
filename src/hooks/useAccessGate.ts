@@ -1,61 +1,60 @@
-import { useState } from "react";
-import { modeFromStorage, readAccessMode, storageValueForMode, type AccessMode } from "../domain/accessGate";
-
-const storageKey = "brazil.view";
-
-function readStoredMode(): AccessMode | null {
-  try {
-    const savedMode = modeFromStorage(window.localStorage.getItem(storageKey));
-    const isFullAccess = savedMode === "full";
-    if (isFullAccess) {
-      return savedMode;
-    }
-
-    return modeFromStorage(window.sessionStorage.getItem(storageKey));
-  } catch {
-    return null;
-  }
-}
-
-function storeMode(mode: AccessMode): void {
-  const isFullAccess = mode === "full";
-  if (isFullAccess) {
-    try {
-      window.localStorage.setItem(storageKey, storageValueForMode(mode));
-    } catch {
-      return;
-    }
-
-    return;
-  }
-
-  try {
-    window.sessionStorage.setItem(storageKey, storageValueForMode(mode));
-  } catch {
-    return;
-  }
-}
+import { useEffect, useState } from "react";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getListingNotesClient } from "../domain/supabaseClient";
+import { readStoredVisitorName, resolveVisitorName, storeVisitorName } from "../domain/visitorName";
 
 export function useAccessGate() {
-  const [accessMode, setAccessMode] = useState<AccessMode | null>(readStoredMode);
-  const isLocked = accessMode === null;
-  const isReadOnly = accessMode === "read";
+  const [visitorName, setVisitorName] = useState<string | null>(readStoredVisitorName);
+  const isLocked = visitorName === null;
+  const isReadOnly = false;
 
-  function handleUnlock(password: string): boolean {
-    const mode = readAccessMode(password);
-    const isAccepted = mode !== null;
-    if (!isAccepted || !mode) {
+  useEffect(
+    function syncVisitorName() {
+      if (!visitorName) {
+        return;
+      }
+
+      const client = getListingNotesClient();
+      if (!client) {
+        return;
+      }
+
+      let isCancelled = false;
+
+      async function saveVisitor(remoteClient: SupabaseClient) {
+        const { error } = await remoteClient.from("app_visitors").upsert({
+          visitor_name: visitorName,
+          updated_at: new Date().toISOString(),
+        });
+        if (isCancelled || error) {
+          return;
+        }
+      }
+
+      void saveVisitor(client);
+
+      return function cancelVisitorSync() {
+        isCancelled = true;
+      };
+    },
+    [visitorName],
+  );
+
+  function handleUnlock(rawName: string): boolean {
+    const identity = resolveVisitorName(rawName);
+    if (!identity) {
       return false;
     }
 
-    storeMode(mode);
-    setAccessMode(mode);
+    storeVisitorName(identity.name);
+    setVisitorName(identity.name);
     return true;
   }
 
   return {
     isLocked,
     isReadOnly,
+    visitorName: visitorName ?? "",
     handleUnlock,
   };
 }

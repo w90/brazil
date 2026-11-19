@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { authorNameField } from "./visitorName";
 import {
   isValidStarCount,
   starRatingKey,
@@ -10,6 +11,7 @@ export interface StarRatingRemoteRow {
   listing_id: string;
   user_id: string;
   stars: number;
+  author_name: string;
 }
 
 export interface RemoteStarRatingChange {
@@ -34,7 +36,7 @@ function readRemoteRow(value: unknown): StarRatingRow | null {
   const userId = value.user_id;
   const stars = value.stars;
   const hasListingId = typeof listingId === "string" && listingId.length > 0;
-  const hasUserId = typeof userId === "string" && userId.length >= 8 && userId.length <= 80;
+  const hasUserId = typeof userId === "string" && userId.length >= 3 && userId.length <= 80;
   const hasStars = typeof stars === "number" && isValidStarCount(stars);
   const isValid = hasListingId && hasUserId && hasStars;
   if (!isValid || typeof listingId !== "string" || typeof userId !== "string" || typeof stars !== "number") {
@@ -130,6 +132,7 @@ export function toStarRatingRemoteRow(row: StarRatingRow): StarRatingRemoteRow {
     listing_id: row.listingId,
     user_id: row.userId,
     stars: row.stars,
+    ...authorNameField(),
   };
 }
 

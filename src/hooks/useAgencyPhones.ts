@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { getListingNotesClient } from "../domain/supabaseClient";
+import { authorNameField } from "../domain/visitorName";
 
 const storageKey = "brazil.agency-phones";
 
@@ -59,7 +60,7 @@ function savePhoneText(phoneTextBySeller: Record<string, string>): void {
   }
 }
 
-export function useAgencyPhones() {
+export function useAgencyPhones(visitorName: string) {
   const [phoneTextBySeller, setPhoneTextBySeller] = useState<Record<string, string>>(loadPhoneText);
   const [isPhonesSaveFailed, setIsPhonesSaveFailed] = useState(false);
 
@@ -72,6 +73,11 @@ export function useAgencyPhones() {
 
   useEffect(
     function loadRemoteAgencyPhones() {
+      const hasVisitor = visitorName.length > 0;
+      if (!hasVisitor) {
+        return;
+      }
+
       const client = getListingNotesClient();
       if (!client) {
         return;
@@ -112,7 +118,7 @@ export function useAgencyPhones() {
         const shouldUploadLocal = remoteCount === 0 && localCount > 0;
         if (shouldUploadLocal) {
           const rows = Object.keys(localPhones).map(function toRow(seller) {
-            return { seller, phone: localPhones[seller] };
+            return { seller, phone: localPhones[seller], ...authorNameField() };
           });
           const { error: uploadError } = await remoteClient.from("agency_phones").upsert(rows);
           if (uploadError) {
@@ -136,7 +142,7 @@ export function useAgencyPhones() {
         isCancelled = true;
       };
     },
-    [],
+    [visitorName],
   );
 
   function handlePhoneChange(sellerKey: string, phoneText: string) {
@@ -171,7 +177,11 @@ export function useAgencyPhones() {
         return;
       }
 
-      const { error } = await remoteClient.from("agency_phones").upsert({ seller: sellerKey, phone: nextText });
+      const { error } = await remoteClient.from("agency_phones").upsert({
+        seller: sellerKey,
+        phone: nextText,
+        ...authorNameField(),
+      });
       if (error) {
         setIsPhonesSaveFailed(true);
         return;

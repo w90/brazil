@@ -42,7 +42,7 @@ function readChangedNickname(value: unknown): string {
   return value.nickname.trim();
 }
 
-export function useListingNicknames(listingIds: string[]) {
+export function useListingNicknames(listingIds: string[], visitorName: string) {
   const [storedNicknames, setStoredNicknames] = useState<ListingNicknamesById>(loadStoredNicknames);
   const [isNicknamesSaveFailed, setIsNicknamesSaveFailed] = useState(false);
   const listingIdKey = listingIds.join("\n");
@@ -64,6 +64,11 @@ export function useListingNicknames(listingIds: string[]) {
 
   useEffect(
     function syncListingNicknames() {
+      const hasVisitor = visitorName.length > 0;
+      if (!hasVisitor) {
+        return;
+      }
+
       const client = getListingNotesClient();
       if (!client) {
         return;
@@ -107,11 +112,16 @@ export function useListingNicknames(listingIds: string[]) {
         isCancelled = true;
       };
     },
-    [listingIdKey, listingIds, storedNicknames],
+    [listingIdKey, listingIds, storedNicknames, visitorName],
   );
 
   useEffect(
     function subscribeToListingNicknames() {
+      const hasVisitor = visitorName.length > 0;
+      if (!hasVisitor) {
+        return;
+      }
+
       const client = getListingNotesClient();
       if (!client) {
         return;
@@ -153,7 +163,7 @@ export function useListingNicknames(listingIds: string[]) {
         void client.removeChannel(channel);
       };
     },
-    [],
+    [visitorName],
   );
 
   return {

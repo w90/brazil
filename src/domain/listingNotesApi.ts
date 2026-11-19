@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { authorNameField } from "./visitorName";
 import {
   isEmptyListingNote,
   listingCommentMaxLength,
@@ -13,6 +14,7 @@ export interface ListingNoteRow {
   is_highlighted: boolean;
   is_rejected: boolean;
   is_contacted: boolean;
+  author_name: string;
 }
 
 function readComment(value: unknown): string {
@@ -46,6 +48,7 @@ export function toListingNoteRow(listingId: string, note: ListingNote): ListingN
     is_highlighted: note.isHighlighted,
     is_rejected: note.isRejected,
     is_contacted: note.isContacted,
+    ...authorNameField(),
   };
 }
 

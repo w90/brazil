@@ -1,4 +1,9 @@
-export const AppHeader = () => {
+interface Props {
+  visitorName: string;
+}
+
+export const AppHeader = (props: Props) => {
+  const { visitorName } = props;
   const flagSrc = `${import.meta.env.BASE_URL}favicon.svg`;
 
   return (
@@ -8,6 +13,7 @@ export const AppHeader = () => {
         <div>
           <p className="hero__kicker">Costa Verde · Angra dos Reis</p>
           <h1>Domy, które warto zobaczyć</h1>
+          <p className="hero__hello">Witaj {visitorName}</p>
         </div>
       </div>
       <nav className="hero__nav">
